@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { QuizService, Question } from '../quiz.service';
+import { QuizService } from '../quiz.service';
 
 @Component({
   selector: 'app-create-quiz',
@@ -75,31 +75,43 @@ export class CreateQuizComponent implements OnInit {
   onSubmit() {
     if (this.quizForm.valid) {
       const formValue = this.quizForm.value;
-      const questions: Question[] = formValue.questions.map((q: any, index: number) => {
-        let correctAnswer: string | boolean;
-        if (q.type === 'MCQ') {
-          correctAnswer = q.options[q.correctAnswer];
-        } else if (q.type === 'TRUE_FALSE') {
-          correctAnswer = q.correctAnswer;
-        } else {
-          correctAnswer = q.correctAnswer;
-        }
-        return {
-          id: (index + 1).toString(),
+      const questions = formValue.questions.map((q: any, index: number) => {
+        const question: any = {
           type: q.type,
-          questionText: q.questionText,
-          options: q.type === 'MCQ' ? q.options : undefined,
-          correctAnswer
+          text: q.questionText
         };
+
+        if (q.type === 'MCQ') {
+          question.options = q.options.map((opt: string, optIndex: number) => ({
+            text: opt,
+            is_correct: optIndex === q.correctAnswer
+          }));
+        } else if (q.type === 'TRUE_FALSE') {
+          question.options = [
+            { text: 'True', is_correct: q.correctAnswer },
+            { text: 'False', is_correct: !q.correctAnswer }
+          ];
+        }
+        // For TEXT type, no options needed
+
+        return question;
       });
 
-      this.quizService.addQuiz({
+      const quizData = {
         title: formValue.title,
         questions
-      });
+      };
 
-      alert('Quiz created successfully!');
-      this.router.navigate(['/']);
+      this.quizService.createQuiz(quizData).subscribe({
+        next: (response) => {
+          alert('Quiz created successfully!');
+          this.router.navigate(['/']);
+        },
+        error: (error) => {
+          alert('Failed to create quiz');
+          console.error(error);
+        }
+      });
     }
   }
 }

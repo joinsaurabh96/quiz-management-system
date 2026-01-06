@@ -73,14 +73,13 @@
 
 ---
 
-## 5. Database Schema (Initial)
+## 5. Database Schema (Implemented)
 
 ### quizzes
 | column      | type      | notes |
 |------------|-----------|------|
 | id         | uuid (pk) | |
 | title      | text      | |
-| created_at | timestamp | |
 
 ---
 
@@ -89,10 +88,18 @@
 |--------------|-----------|------|
 | id           | uuid (pk) | |
 | quiz_id      | uuid (fk)| references quizzes(id) |
-| type         | text      | 'mcq' | 'true_false' | 'text' |
-| prompt       | text      | |
-| options      | jsonb     | for MCQ |
-| correct_answer | jsonb   | auto-graded types only |
+| type         | text      | 'MCQ' | 'TRUE_FALSE' | 'TEXT' |
+| text         | text      | question prompt |
+
+---
+
+### options
+| column        | type      | notes |
+|--------------|-----------|------|
+| id           | uuid (pk) | |
+| question_id  | uuid (fk)| references questions(id) |
+| text         | text      | option text |
+| is_correct   | boolean   | marks correct answer |
 
 ---
 
@@ -100,24 +107,29 @@
 | column      | type      | notes |
 |------------|-----------|------|
 | id         | uuid (pk) | |
-| quiz_id    | uuid (fk) | |
-| answers    | jsonb     | user responses |
-| score      | integer   | calculated |
-| created_at | timestamp | |
+| quiz_id    | uuid (fk) | references quizzes(id) |
+| answers    | jsonb     | user responses array |
+| score      | integer   | calculated score |
+| total      | integer   | total auto-gradable questions |
+| created_at | timestamp | submission timestamp |
 
 ---
 
-## 6. API Endpoints (Planned)
+## 6. API Endpoints (Implemented)
 
 ### Admin
+- `POST /api/admin/login`
+  - Admin login (returns token)
 - `POST /api/quizzes`
-  - Create quiz with questions
+  - Create quiz with questions (requires admin auth)
 
 ### Public
-- `GET /api/quizzes/:id`
-  - Fetch quiz for taking
-- `POST /api/quizzes/:id/submit`
-  - Submit answers and receive score
+- `GET /api/quizzes`
+  - Get all quizzes (list view)
+- `GET /api/quizzes/{id}`
+  - Fetch quiz with questions and options for taking
+- `POST /api/quizzes/{id}/submit`
+  - Submit answers and receive score (backend calculates)
 
 ---
 
@@ -170,17 +182,78 @@ These choices prioritize **correctness, clarity, and delivery**.
 
 ## 10. Scope Changes During Implementation
 
-(To be updated if scope changes during the session.)
+### Changes Made:
+1. **Database Schema**: 
+   - Changed from JSONB storage for options to normalized relational tables (options table)
+   - This provides better data integrity and query flexibility
+   - Added `total` field to submissions to track auto-gradable question count
+
+2. **Authentication**:
+   - Added basic admin authentication (simple token-based) for quiz creation
+   - This was necessary to protect the quiz creation endpoint as per requirements
+   - Used environment variables for admin credentials
+
+3. **Scoring Implementation**:
+   - Moved scoring logic from frontend to backend for security and reliability
+   - Backend now handles all score calculations and stores submissions
+   - Frontend only displays results received from backend
+
+4. **Question Type Handling**:
+   - TEXT questions are stored but not auto-graded (as planned)
+   - Only MCQ and TRUE_FALSE questions contribute to score
+   - TEXT answers are stored in submissions for potential manual review
+
+5. **API Response Format**:
+   - Quiz endpoint returns structured JSON with nested questions and options
+   - Ensures frontend receives consistent, properly formatted data
 
 ---
 
 ## 11. If I Had More Time
 
-- Add authentication & roles
-- Quiz editing and versioning
-- Better UI/UX polish
-- Text answer review UI
-- Automated tests
-- Deployment with CI/CD
+### Immediate Improvements:
+1. **Enhanced Authentication**:
+   - Proper JWT-based authentication with refresh tokens
+   - User roles and permissions system
+   - Password hashing and secure credential management
+
+2. **Quiz Management**:
+   - Edit and delete existing quizzes
+   - Quiz versioning and history tracking
+   - Draft/save functionality for quiz creation
+
+3. **UI/UX Enhancements**:
+   - Modern, responsive design with better styling
+   - Loading states and error handling
+   - Form validation feedback
+   - Accessibility improvements (ARIA labels, keyboard navigation)
+
+4. **Text Answer Review**:
+   - Admin interface to review and grade text answers
+   - Manual scoring workflow
+   - Feedback system for text responses
+
+### Advanced Features:
+5. **Testing**:
+   - Unit tests for backend logic (pytest)
+   - Integration tests for API endpoints
+   - Frontend component tests (Angular testing utilities)
+   - E2E tests with Cypress or Playwright
+
+6. **Deployment & DevOps**:
+   - Docker containerization for both frontend and backend
+   - CI/CD pipeline (GitHub Actions)
+   - Environment configuration management
+   - Database migrations (Alembic)
+   - Production deployment on cloud platforms (Vercel/Railway/Heroku)
+
+7. **Additional Features**:
+   - Quiz analytics and statistics
+   - Timer functionality for quizzes
+   - Question randomization
+   - Multiple attempts tracking
+   - Export results to PDF/CSV
+   - Email notifications for quiz completion
+   - Public quiz sharing with unique URLs
 
 ---

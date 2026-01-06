@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { QuizService, Quiz, Question } from '../quiz.service';
 
 @Component({
   selector: 'app-quiz-result',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './quiz-result.html',
   styleUrl: './quiz-result.css',
 })
@@ -14,40 +14,81 @@ export class QuizResultComponent implements OnInit {
   answers: any[] = [];
   score = 0;
   total = 0;
+  loading = true;
+  error: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private quizService: QuizService
+    private quizService: QuizService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     const state = history.state;
 
-    if (id && state.answers) {
-      this.quiz = this.quizService.getQuiz(id) || null;
+    console.log('Quiz Result - ID:', id);
+    console.log('Quiz Result - State:', state);
+
+    if (!id) {
+      console.error('No quiz ID in route');
+      this.error = 'No quiz ID provided';
+      this.loading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Try to get data from navigation state first
+    if (state && state.answers && state.score !== undefined && state.total !== undefined) {
+      console.log('Using navigation state data');
       this.answers = state.answers;
       this.score = state.score;
       this.total = state.total;
+      
+      // Load quiz data
+      this.quizService.getQuiz(id).subscribe({
+        next: (quiz) => {
+          console.log('Quiz loaded for result:', quiz);
+          this.quiz = quiz;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load quiz', error);
+          this.error = 'Failed to load quiz data';
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
     } else {
-      this.router.navigate(['/quizzes']);
+      // No state data - redirect back to quizzes
+      console.warn('No state data found, redirecting to quizzes');
+      this.error = 'Quiz submission data not found. Please take the quiz again.';
+      this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
-  isCorrect(question: Question, userAnswer: any, index: number): boolean {
-    if (question.type === 'MCQ') {
-      return !!(question.options && userAnswer !== null && question.options[userAnswer] === question.correctAnswer);
-    } else if (question.type === 'TRUE_FALSE') {
-      return userAnswer === question.correctAnswer;
-    } else {
-      return (userAnswer as string).toLowerCase().trim() === (question.correctAnswer as string).toLowerCase().trim();
+  isCorrect(question: Question, userAnswer: any, index: number): boolean | null {
+    // TEXT questions are not auto-graded, return null to indicate "not applicable"
+    if (question.type === 'TEXT') {
+      return null;
     }
+    
+    if (question.type === 'MCQ') {
+      // For MCQ, userAnswer is the index of selected option
+      return !!(question.options && userAnswer !== null && question.options[userAnswer]?.is_correct);
+    } else if (question.type === 'TRUE_FALSE') {
+      // For TRUE_FALSE, userAnswer is boolean, check if it matches the correct option
+      return !!(question.options && question.options.find(opt => opt.is_correct)?.text.toLowerCase() === (userAnswer ? 'true' : 'false'));
+    }
+    return false;
   }
 
   getAnswerDisplay(question: Question, answer: any): string {
     if (question.type === 'MCQ') {
-      return question.options ? question.options[answer] || 'Not answered' : 'Not answered';
+      return question.options && answer !== null ? question.options[answer]?.text || 'Not answered' : 'Not answered';
     } else if (question.type === 'TRUE_FALSE') {
       return answer === true ? 'True' : answer === false ? 'False' : 'Not answered';
     } else {
@@ -56,13 +97,18 @@ export class QuizResultComponent implements OnInit {
   }
 
   getCorrectDisplay(question: Question): string {
-    if (question.type === 'MCQ') {
-      return question.options ? question.options.findIndex(opt => opt === question.correctAnswer) !== -1 ? question.correctAnswer as string : '' : '';
-    } else if (question.type === 'TRUE_FALSE') {
-      return question.correctAnswer ? 'True' : 'False';
-    } else {
-      return question.correctAnswer as string;
+    // TEXT questions don't have a correct answer displayed (not auto-graded)
+    if (question.type === 'TEXT') {
+      return 'Not auto-graded';
     }
+    
+    const correctOption = question.options?.find(opt => opt.is_correct);
+    if (question.type === 'MCQ') {
+      return correctOption?.text || '';
+    } else if (question.type === 'TRUE_FALSE') {
+      return correctOption?.text || '';
+    }
+    return '';
   }
 
   getScorePercentage(): number {

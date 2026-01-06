@@ -1,11 +1,18 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, timeout, catchError } from 'rxjs';
+import { AuthService } from './auth.service';
+
+export interface Option {
+  text: string;
+  is_correct: boolean;
+}
 
 export interface Question {
   id: string;
-  type: 'MCQ' | 'TRUE_FALSE' | 'TEXT';
-  questionText: string;
-  options?: string[]; // for MCQ
-  correctAnswer: string | boolean; // string for TEXT and MCQ, boolean for TRUE_FALSE
+  type: string;
+  text: string;
+  options?: Option[];
 }
 
 export interface Quiz {
@@ -14,38 +21,74 @@ export interface Quiz {
   questions: Question[];
 }
 
+export interface QuizSummary {
+  id: string;
+  title: string;
+}
+
+export interface QuizCreate {
+  title: string;
+  questions: {
+    type: string;
+    text: string;
+    options?: Option[];
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
-  private quizzes: Quiz[] = [];
+  private readonly API_URL = 'http://localhost:8000/api';
 
-  constructor() {
-    // Load from localStorage
-    const stored = localStorage.getItem('quizzes');
-    if (stored) {
-      this.quizzes = JSON.parse(stored);
-    }
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
   }
 
-  getQuizzes(): Quiz[] {
-    return this.quizzes;
+  createQuiz(quiz: QuizCreate): Observable<any> {
+    return this.http.post(`${this.API_URL}/quizzes`, quiz, { headers: this.getHeaders() });
   }
 
-  getQuiz(id: string): Quiz | undefined {
-    return this.quizzes.find(q => q.id === id);
+  getQuiz(id: string): Observable<any> {
+    return this.http.get(`${this.API_URL}/quizzes/${id}`, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    }).pipe(
+      timeout(10000), // 10 second timeout
+      catchError((error: HttpErrorResponse) => {
+        console.error('HTTP Error in getQuiz:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
-  addQuiz(quiz: Omit<Quiz, 'id'>): void {
-    const newQuiz: Quiz = {
-      ...quiz,
-      id: Date.now().toString()
-    };
-    this.quizzes.push(newQuiz);
-    this.saveToStorage();
+  // For listing all quizzes - we might need to add this endpoint to backend
+  getAllQuizzes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/quizzes`, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    });
   }
 
-  private saveToStorage(): void {
-    localStorage.setItem('quizzes', JSON.stringify(this.quizzes));
+  submitQuiz(quizId: string, answers: any[]): Observable<any> {
+    return this.http.post(`${this.API_URL}/quizzes/${quizId}/submit`, { answers }, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    }).pipe(
+      timeout(15000), // 15 second timeout for submission
+      catchError((error: HttpErrorResponse) => {
+        console.error('HTTP Error in submitQuiz:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

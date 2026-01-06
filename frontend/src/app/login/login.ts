@@ -10,15 +10,20 @@ import { AuthService } from '../auth.service';
   styleUrl: './login.css',
 })
 export class LoginComponent {
+  email = '';
   password = '';
 
   constructor(private router: Router, private authService: AuthService) {}
 
   onLogin() {
-    if (this.authService.login(this.password)) {
-      this.router.navigate(['/admin/create-quiz']);
-    } else {
-      alert('Invalid password');
-    }
+    this.authService.login(this.email, this.password).subscribe({
+      next: (response: any) => {
+        this.authService.setToken(response.token);
+        this.router.navigate(['/admin/create-quiz']);
+      },
+      error: (error) => {
+        alert('Invalid credentials');
+      }
+    });
   }
 }

@@ -1,0 +1,94 @@
+.take-quiz-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+mat-list-item {
+  margin-bottom: 16px;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+mat-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+mat-list-item h3 {
+  color: #1976d2;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+mat-list-item p {
+  color: #666;
+  margin: 0;
+}
+
+button {
+  margin-left: auto;
+  border-radius: 20px !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .take-quiz-container {
+    padding: 20px 15px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+
+  mat-list-item {
+    margin-bottom: 12px;
+  }
+
+  mat-list-item h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .take-quiz-container {
+    padding: 15px 10px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  mat-list-item {
+    padding: 16px !important;
+  }
+
+  button {
+    margin-top: 12px;
+    margin-left: 0;
+    width: 100%;
+  }
+}

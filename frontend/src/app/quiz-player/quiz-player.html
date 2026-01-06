@@ -1,0 +1,52 @@
+<div class="container mt-4" *ngIf="quiz">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ quiz.title }}</h2>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="quizForm" (ngSubmit)="submitQuiz()">
+        <div formArrayName="answers">
+          <div *ngFor="let question of quiz.questions; let i = index" class="mb-4">
+            <h4>{{ i + 1 }}. {{ question.questionText }}</h4>
+
+            <!-- MCQ -->
+            <div *ngIf="question.type === 'MCQ'" class="ms-3">
+              <div *ngFor="let option of question.options; let j = index" class="form-check">
+                <input class="form-check-input" type="radio" [formControl]="getAnswerControl(i)" [value]="j" [id]="'q' + i + 'o' + j">
+                <label class="form-check-label" [for]="'q' + i + 'o' + j">
+                  {{ option }}
+                </label>
+              </div>
+            </div>
+
+            <!-- True/False -->
+            <div *ngIf="question.type === 'TRUE_FALSE'" class="ms-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" [formControl]="getAnswerControl(i)" [value]="true" [id]="'q' + i + 'true'">
+                <label class="form-check-label" [for]="'q' + i + 'true'">True</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" [formControl]="getAnswerControl(i)" [value]="false" [id]="'q' + i + 'false'">
+                <label class="form-check-label" [for]="'q' + i + 'false'">False</label>
+              </div>
+            </div>
+
+            <!-- Text -->
+            <div *ngIf="question.type === 'TEXT'" class="ms-3">
+              <input type="text" class="form-control" [formControl]="getAnswerControl(i)" placeholder="Your answer">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="!quizForm.valid">Submit Quiz</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!quiz" class="container mt-4">
+  <div class="alert alert-danger">
+    <h4>Quiz not found</h4>
+    <a href="/quizzes" class="btn btn-primary">Back to Quizzes</a>
+  </div>
+</div>

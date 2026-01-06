@@ -1,0 +1,14 @@
+<div class="container mt-4">
+  <h1 class="mb-4">Available Quizzes</h1>
+  <div class="row">
+    <div class="col-md-6" *ngFor="let quiz of quizzes">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{ quiz.title }}</h5>
+          <p class="card-text">Number of questions: {{ quiz.questions.length }}</p>
+          <button class="btn btn-primary" (click)="takeQuiz(quiz)">Take Quiz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

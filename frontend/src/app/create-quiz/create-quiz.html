@@ -1,0 +1,79 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h2>Create New Quiz</h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="quizForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="title" class="form-label">Quiz Title</label>
+              <input type="text" class="form-control" id="title" formControlName="title" required>
+            </div>
+
+            <h4>Questions</h4>
+            <div formArrayName="questions">
+              <div *ngFor="let question of questions.controls; let i = index" [formGroupName]="i" class="card mb-3">
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="form-label">Question Type</label>
+                    <select class="form-select" formControlName="type" (change)="onQuestionTypeChange(i)">
+                      <option value="MCQ">Multiple Choice</option>
+                      <option value="TRUE_FALSE">True/False</option>
+                      <option value="TEXT">Text Answer</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Question Text</label>
+                    <textarea class="form-control" formControlName="questionText" rows="3" required></textarea>
+                  </div>
+
+                  <div *ngIf="question.get('type')?.value === 'MCQ'" formArrayName="options">
+                    <h5>Options</h5>
+                    <div *ngFor="let option of getOptions(i).controls; let j = index" class="input-group mb-2">
+                      <input type="text" class="form-control" [formControl]="getOptionControl(i, j)" placeholder="Option {{j+1}}">
+                      <button type="button" class="btn btn-outline-danger" *ngIf="getOptions(i).length > 2" (click)="removeOption(i, j)">Remove</button>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" (click)="addOption(i)">Add Option</button>
+
+                    <div class="mt-3">
+                      <label class="form-label">Correct Answer</label>
+                      <select class="form-select" formControlName="correctAnswer">
+                        <option [value]="j" *ngFor="let opt of getOptions(i).controls; let j = index">
+                          Option {{j+1}}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div *ngIf="question.get('type')?.value === 'TRUE_FALSE'" class="mt-3">
+                    <label class="form-label">Correct Answer</label>
+                    <select class="form-select" formControlName="correctAnswer">
+                      <option [value]="true">True</option>
+                      <option [value]="false">False</option>
+                    </select>
+                  </div>
+
+                  <div *ngIf="question.get('type')?.value === 'TEXT'" class="mt-3">
+                    <label class="form-label">Correct Answer</label>
+                    <input type="text" class="form-control" formControlName="correctAnswer">
+                  </div>
+
+                  <button type="button" class="btn btn-danger mt-3" (click)="removeQuestion(i)">Remove Question</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-secondary" (click)="addQuestion()">Add Question</button>
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary" [disabled]="!quizForm.valid">Create Quiz</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

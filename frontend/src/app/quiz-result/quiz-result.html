@@ -1,0 +1,28 @@
+<div class="container mt-4" *ngIf="quiz">
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ quiz.title }} - Results</h2>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <h4>Total Questions: {{ total }}</h4>
+        <h4>Correct Answers: {{ score }}</h4>
+        <h4>Score: {{ getScorePercentage() }}%</h4>
+      </div>
+
+      <h5>Question Details:</h5>
+      <div *ngFor="let question of quiz.questions; let i = index" class="card mb-3">
+        <div class="card-body">
+          <h6>{{ i + 1 }}. {{ question.questionText }}</h6>
+          <p><strong>Your Answer:</strong> {{ getAnswerDisplay(question, answers[i]) }}</p>
+          <p><strong>Correct Answer:</strong> {{ getCorrectDisplay(question) }}</p>
+          <p [class]="isCorrect(question, answers[i], i) ? 'text-success' : 'text-danger'">
+            {{ isCorrect(question, answers[i], i) ? '✓ Correct' : '✗ Incorrect' }}
+          </p>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" (click)="goBack()">Back to Quizzes</button>
+    </div>
+  </div>
+</div>

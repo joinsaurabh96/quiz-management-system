@@ -34,9 +34,13 @@ export class CreateQuizComponent implements OnInit {
     const questionGroup = this.fb.group({
       type: ['MCQ', Validators.required],
       questionText: ['', Validators.required],
-      options: this.fb.array([this.fb.control(''), this.fb.control('')]),
-      correctAnswer: ['']
+      options: this.fb.array([
+        this.fb.control(''),
+        this.fb.control('')
+      ]),
+      correctAnswer: new FormControl(0, Validators.required) // 👈 number
     });
+  
     this.questions.push(questionGroup);
   }
 

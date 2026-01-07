@@ -41,8 +41,8 @@
                     <div class="mt-3">
                       <label class="form-label">Correct Answer</label>
                       <select class="form-select" formControlName="correctAnswer">
-                        <option [value]="j" *ngFor="let opt of getOptions(i).controls; let j = index">
-                          Option {{j+1}}
+                        <option [ngValue]="j" *ngFor="let opt of getOptions(i).controls; let j = index">
+                          Option {{ j + 1 }}
                         </option>
                       </select>
                     </div>
